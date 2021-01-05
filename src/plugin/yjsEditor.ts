@@ -3,6 +3,7 @@ import * as Y from 'yjs';
 import { applySlateOps } from '../apply';
 import { toSlateOps } from '../convert';
 import { SyncDoc, SyncElement } from '../model';
+import { HistoryEditor } from 'slate-history';
 
 export interface YjsEditor extends Editor {
   isRemote: boolean;
@@ -32,9 +33,17 @@ export const YjsEditor = {
     e.isRemote = true;
 
     Editor.withoutNormalizing(e, () => {
-      toSlateOps(remoteEvents).forEach((op) => {
-        e.apply(op);
-      });
+      const doOps = () =>
+        toSlateOps(remoteEvents).forEach((op) => {
+          console.log(op);
+          e.apply(op);
+        });
+
+      if (HistoryEditor.isHistoryEditor(e)) {
+        HistoryEditor.withoutSaving(e, doOps);
+      } else {
+        doOps();
+      }
     });
 
     // eslint-disable-next-line no-return-assign
